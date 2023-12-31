@@ -1,0 +1,19 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore directories and files inside code
+code/*
+
+# Ignore configuration files
+config/env/*
+config/ssh/*
+
+# Ignore data files
+data/*

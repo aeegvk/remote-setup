@@ -1,0 +1,115 @@
+version: '3.8'
+
+x-php: &php
+  build:
+    context: ./docker/php
+    dockerfile: Dockerfile
+    args:
+      - UID=${UID}
+  user: "${UID}:${UID}"
+  tty: true
+
+x-python: &python
+  build:
+    context: ./docker/python
+    dockerfile: Dockerfile
+    args:
+      - UID=${UID}
+  user: "${UID}:${UID}"
+  tty: true
+
+x-rust: &rust
+  build:
+    context: ./docker/rust
+    dockerfile: Dockerfile
+    args:
+      - UID=${UID}
+  user: "${UID}:${UID}"
+  tty: true
+
+x-golang: &golang
+  build:
+    context: ./docker/golang
+    dockerfile: Dockerfile
+    args:
+      - UID=${UID}
+  user: "${UID}:${UID}"
+  tty: true
+
+services:
+  dns-proxy-server:
+    image: defreitas/dns-proxy-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/resolv.conf:/etc/resolv.conf
+    ports:
+      - 5380:5380
+    networks:
+      - default
+
+  database:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_DATABASE=mydb
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data:/var/lib/mysql
+
+  php:
+    <<: *php
+    volumes:
+      - ./code/php:/var/www/html
+    ports:
+      - 8080:80
+    networks:
+      default:
+        aliases:
+          - php.local
+    depends_on:
+      - database
+
+  python:
+    <<: *python
+    volumes:
+      - ./code/python:/app
+    ports:
+      - 8000:8000
+    networks:
+      default:
+        aliases:
+          - python.local
+    depends_on:
+      - database
+
+  rust:
+    <<: *rust
+    volumes:
+      - ./code/rust:/app
+    ports:
+      - 8081:8081
+    networks:
+      default:
+        aliases:
+          - rust.local
+    depends_on:
+      - database
+
+  golang:
+    <<: *golang
+    volumes:
+      - ./code/golang:/app
+    ports:
+      - 8082:8082
+    networks:
+      default:
+        aliases:
+          - golang.local
+    depends_on:
+      - database
+
+networks:
+  default:
+    external:
+      name: dns.mageddo
